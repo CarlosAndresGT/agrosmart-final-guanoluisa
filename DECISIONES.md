@@ -17,10 +17,10 @@
 
 ## Datos
 
-- **Nombre:**
-- **Cédula:**
-- **NN (dos últimos dígitos):**
-- **Categoría asignada (según el último dígito):**
+- **Nombre:Carlos Andres Guanoluisa Torres**
+- **Cédula: 1726682477**
+- **NN (dos últimos dígitos): 77**
+- **Categoría asignada (según el último dígito): Flores**
 
 ---
 
