@@ -19,7 +19,6 @@ public class AgroSmartController {
         this.productoService = productoService;
     }
 
-
     // GET /api/productos - Obtiene el flujo reactivo de productos comercializables
     @GetMapping("/api/productos")
     public Flux<Producto> obtenerProductosComercializables() {
@@ -40,7 +39,7 @@ public class AgroSmartController {
         return productoService.generarPublicidad(producto, audiencia);
     }
 
-    // Manejador de excepcion para responder HTTP 404 cuando no exista la id
+    // Manejador de excepcion para responder HTTP 404 ante id inexistente
     @ExceptionHandler(ProductoNoEncontradoException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Mono<String> handleProductoNoEncontrado(ProductoNoEncontradoException ex) {

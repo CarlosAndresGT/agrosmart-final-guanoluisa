@@ -369,28 +369,91 @@ $ curl "http://localhost:8177/api/agrosmart/publicidad?producto=Rosas%20Rojas&au
 **7.1** Pega la salida real de tus pruebas (`./mvnw test` o `./gradlew test`).
 
 ```
-
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------------< ec.edu.espe:agrosmart >------------------------
+[INFO] Building agrosmart 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ agrosmart ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ agrosmart ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ agrosmart ---
+[INFO] skip non existing resourceDirectory C:\Users\carlo\OneDrive\Documentos\ESPE\F7MO\FINALPROGRAMACION\agrosmart-final-guanoluisa\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ agrosmart ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ agrosmart ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running ec.edu.espe.agrosmart.domain.ProductoFiltersTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.069 s -- in ec.edu.espe.agrosmart.domain.ProductoFiltersTest
+[INFO] Running ec.edu.espe.agrosmart.domain.ProductoTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.010 s -- in ec.edu.espe.agrosmart.domain.ProductoTest
+[INFO] Running ec.edu.espe.agrosmart.service.ProductoServiceTest
+WARNING: A Java agent has been loaded dynamically (C:\Users\carlo\.m2\repository\net\bytebuddy\byte-buddy-agent\1.14.18\byte-buddy-agent-1.14.18.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+Procesando producto [boundedElastic-1]: ID=null, Nombre=ROSAS ROJAS
+Procesando producto [boundedElastic-1]: ID=null, Nombre=ORQUIDEAS
+Procesando producto [boundedElastic-1]: ID=null, Nombre=GIRASOLES
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.469 s -- in ec.edu.espe.agrosmart.service.ProductoServiceTest
+[INFO] Running ec.edu.espe.agrosmart.service.PublicidadServiceTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.065 s -- in ec.edu.espe.agrosmart.service.PublicidadServiceTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  4.397 s
+[INFO] Finished at: 2026-07-31T02:52:45-05:00
+[INFO] ------------------------------------------------------------------------
 ```
 
 **7.2** ¿Cuántos productos espera tu `expectNextCount(...)` y por qué ese número
 concreto? Relaciónalo con tu semilla.
 
->
+>Espera 3 productos, ya que en la semilla se colo 5 registros pero de estos
+> 2 eran invalidos, por lo que se esperaria solo 3, es decir la funcion de filtrado 
+> descarta los 2 valores no validos y solo permite pasar los validos
 
 **7.3** ¿Por qué mockeaste `ProductoRepository` en lugar de dejar que la prueba consulte
 PostgreSQL?
 
->
+>Mockeamos `ProductoRepository` para garantizar que la prueba unitaria sea rápida
+> determinista y completamente aislada del entorno. Asi la prueba se ejecuta en milisegundos sin 
+> requerir una conexión real a la base de datos PostgreSQL en Docker ni depender del estado previo de la tabla.
+
 
 **7.4** ¿Qué demuestra `assertNotSame` que `assertEquals` **no** demuestra en tu prueba
 de copia defensiva?
 
->
+>assertEquals` solo comprueba que dos listas contengan los mismos elementos y en el 
+> mismo orden, a diferencia del `assertNotSame` que comprueba la identidad de memoria 
+> demostrando que la lista retornada por el getter no es la misma instancia física que la lista interna original 
+> pasada al constructor, confirmando la existencia de la copia defensiva.
 
 **7.5** ¿Por qué una prueba de un `Flux` que no llama a `verifyComplete()` (o a
 `verify()`) no está probando nada?
 
->
+>En llamadas reactivas con Project Reactor, los flujos (`Flux` y `Mono`) son lazy y nada se ejecuta hasta que 
+> exista una suscripción activa. `StepVerifier.create(...)` configura las expectativas del flujo, pero
+> es `verifyComplete()` (o `verify()`) el método que inicia la suscripción real al flujo y bloquea la prueba
+> esperando a que los elementos sean emitidos y completados.
 
 ---
 
