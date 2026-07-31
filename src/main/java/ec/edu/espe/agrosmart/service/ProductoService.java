@@ -1,5 +1,6 @@
 package ec.edu.espe.agrosmart.service;
 
+import ec.edu.espe.agrosmart.ai.AgroSmartAIService;
 import ec.edu.espe.agrosmart.domain.Producto;
 import ec.edu.espe.agrosmart.domain.ProductoFilters;
 import ec.edu.espe.agrosmart.exception.ProductoNoEncontradoException;
@@ -11,6 +12,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.List;
 
 @Service
@@ -24,9 +26,11 @@ public class ProductoService {
             List.of("contacto@agrosmart.ec"));
 
     private final ProductoRepository repository;
+    private final AgroSmartAIService aiService;
 
-    public ProductoService(ProductoRepository repository) {
+    public ProductoService(ProductoRepository repository, AgroSmartAIService aiService) {
         this.repository = repository;
+        this.aiService = aiService;
     }
 
     // Obtiene el flujo reactivo de productos comercializables
@@ -61,5 +65,16 @@ public class ProductoService {
                 .map(ProductoMapper::toDominio)
                 // switchIfEmpty: si el Mono resultó estar vacío es decir la id no existe, emite un error reactivo con la excepción personalizada
                 .switchIfEmpty(Mono.error(new ProductoNoEncontradoException(id)));
+    }
+
+    //  publicidad para un producto usando el módulo de IA con LangChain4j de forma reactiva.
+    public Mono<String> generarPublicidad(String producto, String audiencia) {
+        return Mono.fromCallable(() -> aiService.generarPublicidad(producto, audiencia))
+                // subscribeOn(boundedElastic): aísla la llamada HTTP síncrona/bloqueante del cliente de IA fuera del event loop
+                .subscribeOn(Schedulers.boundedElastic())
+                .timeout(Duration.ofSeconds(30))
+                // onErrorResume: si el proveedor externo falla, evita tumbar la aplicación retornando un mensaje de respaldo
+                .onErrorResume(e -> Mono.just(
+                        "Publicidad no disponible en este momento (" + e.getClass().getSimpleName() + ")"));
     }
 }

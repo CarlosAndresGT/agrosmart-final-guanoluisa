@@ -43,5 +43,10 @@ public class DataSeeder implements CommandLineRunner {
         // Ejecución de prueba reactiva de la Fase 4
         System.out.println("--Probando Servicio Reactivo (obtenerProductosComercializables) ---");
         productoService.obtenerProductosComercializables().subscribe();
+
+        // Prueba de modulo de IA  Fase 5
+        System.out.println("- Probando Modulo de IA (generarPublicidad) ---");
+        productoService.generarPublicidad("Rosas Rojas", "floristerias premium")
+                .subscribe(pub -> System.out.println("Publicidad IA: " + pub));
     }
 }

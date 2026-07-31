@@ -247,29 +247,80 @@ qué no son intercambiables en esos dos lugares?
 **5.1** Pega tu interfaz `AgroSmartAIService` completa.
 
 ```java
+package ec.edu.espe.agrosmart.ai;
+
+import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.V;
+import dev.langchain4j.service.spring.AiService;
+
+@AiService
+public interface AgroSmartAIService {
+
+    @UserMessage("""
+            Redacta una frase publicitaria de máximo 100 caracteres para vender \
+            {{producto}} dirigido a {{audiencia}}.""")
+    String generarPublicidad(@V("producto") String producto,
+                             @V("audiencia") String audiencia);
+}
 
 ```
 
 **5.2** ¿Qué hace `@V("producto")` y qué pasaría si lo quitaras dejando solo el
 parámetro?
 
->
+>`@V("producto")` asocia de forma explícita la variable `producto` pasada como parámetro de Java con el marcador o
+ > plantilla `{{producto}}` definido dentro del prompt de `@UserMessage` si se elimina `@V` dejando únicamente el 
+> parámetro, LangChain4j no sabría a qué variable del prompt corresponde cada argumento
 
 **5.3** ¿En qué archivo y con qué líneas configuraste el modelo? ¿Por qué **no** hizo
 falta declarar un `@Bean`?
 
->
+>Lo configuré en el archivo `application-prod.properties` con las siguientes líneas:
+> ```properties
+> langchain4j.open-ai.chat-model.api-key=demo
+> langchain4j.open-ai.chat-model.model-name=gpt-4o-mini
+> langchain4j.open-ai.chat-model.timeout=30s
+> langchain4j.open-ai.chat-model.log-requests=true
+> langchain4j.open-ai.chat-model.log-responses=true
+> logging.level.dev.langchain4j=DEBUG
+> ```
+> No hace falta declarar un `@Bean` explícito porque el starter `langchain4j-open-ai-spring-boot-starter`
+> autoconfigura e inyecta automáticamente la implementación del modelo y la interfaz anotada con `@AiService` en el contexto 
+> de Spring a partir de estas propiedades.
+
 
 **5.4** ¿Por qué la llamada a la IA también necesita `boundedElastic`, si no es una
 consulta a base de datos?
 
->
+>Si bien no es una consulta a PostgreSQL, la invocación hacia el proveedor externo a través de LangChain4j 
+> es una llamada HTTP síncrona/bloqueante de I/O de red. Si esta llamada se realizara en el event loop de Netty, 
+> congelaría el hilo principal
 
 **5.5** Si tu proveedor devolvió un error durante el examen, pega el mensaje real y la
 respuesta que produjo tu `onErrorResume`.
-
+>No obtuve un error, tuve la siguiente salida
 ```
-
+--Probando Servicio Reactivo (obtenerProductosComercializables) ---
+- Probando Modulo de IA (generarPublicidad) ---
+Hibernate: 
+    select
+        pe1_0.id_producto,
+        pe1_0.categoria,
+        pe1_0.correos_notificacion,
+        pe1_0.nombre_producto,
+        pe1_0.precio_usd,
+        pe1_0.stock_kg 
+    from
+        tbl_productos_base_77 pe1_0
+Procesando producto [boundedElastic-1]: ID=1, Nombre=ROSAS DE EXPORTACION
+Procesando producto [boundedElastic-1]: ID=2, Nombre=ORQUIDEAS BLANCAS
+Procesando producto [boundedElastic-1]: ID=3, Nombre=GIRASOLES 
+Publicidad IA: "Deslumbra a tus clientes con nuestras exclusivas Rosas Rojas: elegancia y pasión en cada pétalo."
+```
+>Para probar cambie la key demo por una invalida, le coloque dem para que no funcione
+> y lo que obtuve fue:
+```java
+Publicidad IA: Publicidad no disponible en este momento (RuntimeException)
 ```
 
 ---
