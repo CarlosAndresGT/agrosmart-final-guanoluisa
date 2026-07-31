@@ -330,17 +330,37 @@ Publicidad IA: Publicidad no disponible en este momento (RuntimeException)
 **6.1** Pega la salida real de tus cuatro `curl`.
 
 ```
+$ curl http://localhost:8177/api/productos
+[{"id":1,"nombre":"ROSAS DE EXPORTACION","categoria":"Flores","precioUsd":18.50,"correosNotificacion":["ventas@rosas.com","export@rosas.com"]},{"id":2,"nombre":"ORQUIDEAS BLANCAS","categoria":"Flores","precioUsd":25.00,"correosNotificacion":["contacto@orquideas.ec"]},{"id":3,"nombre":"GIRASOLES ","categoria":"Flores","precioUsd":12.00,"correosNotificacion":["info@girasoles.com","pedidos@girasoles.com"]}]
+---------------------------------------------------------------------
+$ curl http://localhost:8177/api/productos/1
+{"id":1,"nombre":"Rosas de Exportacion","categoria":"Flores","precioUsd":18.50,"correosNotificacion":["ventas@rosas.com","export@rosas.com"]}
+---------------------------------------------------------------------
+$ curl -i http://localhost:8177/api/productos/11
+HTTP/1.1 404 Not Found
+Content-Type: text/plain;charset=UTF-8
+Content-Length: 36
 
+Producto no encontrado con el id: 11
+----------------------------------------------------------------------
+$ curl "http://localhost:8177/api/agrosmart/publicidad?producto=Rosas%20Rojas&audiencia=floristerias%20premium"
+"Eleva tu oferta con nuestras exclusivas rosas rojas: elegancia y pasión en cada pétalo."
 ```
 
 **6.2** ¿Cómo lograste que el id inexistente responda **404** y no 500?
 
->
+>Lo logré anotando la excepción `ProductoNoEncontradoException` con `@ResponseStatus(HttpStatus.NOT_FOUND)` y añadiendo el método manejador
+> `@ExceptionHandler(ProductoNoEncontradoException.class)` anotado con `@ResponseStatus(HttpStatus.NOT_FOUND)` en `AgroSmartController`
+> asi cuando `buscarPorId` emite `Mono.error(new ProductoNoEncontradoException(id))`, WebFlux intercepta el error y responde con el código HTTP 404 Not Found
+> en lugar de un error 500 no controlado.
 
 **6.3** ¿Qué pasaría si tu controlador devolviera `List<Producto>` en lugar de
 `Flux<Producto>`? ¿Seguiría compilando? ¿Seguiría siendo no bloqueante?
 
->
+>Si el controlador devolviera `List<Producto>` la aplicación seguiría 
+> compilando porque Spring admite respuestas síncronas. 
+> pero dejaría de ser no bloqueante, ya que para devolver una `List` el servidor tendría que bloquear el hilo para materializar
+> toda la colección en memoria antes de responder
 
 ---
 
