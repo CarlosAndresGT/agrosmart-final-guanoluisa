@@ -156,29 +156,89 @@ public static final Function<Producto, Producto> A_MAYUSCULAS = p ->
 **4.1** Pega tu método `obtenerProductosComercializables()` completo.
 
 ```java
+public Flux<Producto> obtenerProductosComercializables() {
+        // fromCallable: difiere la ejecución bloqueante de repository.findAll() hasta que exista suscripción
 
+        return Mono.fromCallable(repository::findAll)
+                // subscribeOn(boundedElastic): aísla la llamada JPA bloqueante fuera del event loop de Netty
+
+                .subscribeOn(Schedulers.boundedElastic())
+                // flatMapMany: desenvuelve la List<ProductoEntity> emitida a un flujo continuo Flux<ProductoEntity>
+
+                .flatMapMany(Flux::fromIterable)
+
+                // map: transforma la entidad del ORM al modelo de dominio inmutable
+                .map(ProductoMapper::toDominio)
+
+                // map: aplica la transformación funcional A_MAYUSCULAS retornando una nueva  instancia inmutable
+                .map(ProductoFilters.A_MAYUSCULAS)
+
+                // filter: descarta los productos no validos (precio <= 0 o sin correos)
+                .filter(ProductoFilters.IS_VALID)
+
+                // doOnNext: ejecuta un efecto secundario de trazabilidad sin alterar el flujo
+                .doOnNext(ProductoFilters.LOG_PRODUCTO)
+
+                // defaultIfEmpty: emite un producto genérico de respaldo si el filtro vació elflujo completo
+                .defaultIfEmpty(PRODUCTO_GENERICO);
+    }
 ```
 
 **4.2** ¿Qué pasa **exactamente** si eliminas
 `.subscribeOn(Schedulers.boundedElastic())` de ese método? Si lo probaste, indica qué
 hilo aparecía en el log antes y después.
 
->
+>Si eliminamos `.subscribeOn(Schedulers.boundedElastic())` la llamada I/O bloqueante al repositorio JPA
+> `repository.findAll()` se ejecutaría directamente sobre el hilo del event loop de 
+> Netty y como Netty atiende todas las solicitudes con un número reducido
+> de hilos, bloquear ese hilo con la conexión JDBC congelaría las demás peticiones concurrentes del servidor. 
+> Al incluir `subscribeOn(Schedulers.boundedElastic())`, la operación bloqueante se delega al pool de 
+> hilos `boundedElastic-1`, 
+
+> PRUEBA
+```java
+--Probando Servicio Reactivo (obtenerProductosComercializables) ---
+Hibernate: 
+    select
+        pe1_0.id_producto,
+        pe1_0.categoria,
+        pe1_0.correos_notificacion,
+        pe1_0.nombre_producto,
+        pe1_0.precio_usd,
+        pe1_0.stock_kg 
+    from
+        tbl_productos_base_77 pe1_0
+Procesando producto [boundedElastic-1]: ID=1, Nombre=ROSAS DE EXPORTACION
+Procesando producto [boundedElastic-1]: ID=2, Nombre=ORQUIDEAS BLANCAS
+Procesando producto [boundedElastic-1]: ID=3, Nombre=GIRASOLES 
+
+```
 
 **4.3** ¿Por qué `Mono.fromCallable(...)` y no `Mono.just(repository.findAll())`?
 (pista: cuándo se ejecuta cada uno)
 
->
+>`Mono.just(repository.findAll())` evalua e invoca inmediatamente el método `repository.findAll()` 
+> en el hilo actual al construir el flujo, antes de cualquier suscripción o cambio de Scheduler. 
+> En cambio, `Mono.fromCallable(repository::findAll)` difiere la llamada hasta el momento de la
+> suscripción, permitiendo que `.subscribeOn(Schedulers.boundedElastic())` capture esa ejecución bloqueante
+> y la mueva al pool `boundedElastic`.
 
 **4.4** En **tu** código, ¿dónde usaste `defaultIfEmpty` y dónde `switchIfEmpty`, y por
 qué no son intercambiables en esos dos lugares?
 
->
+>En `ProductoService`, usé `defaultIfEmpty(PRODUCTO_GENERICO)` en `obtenerProductosComercializables()` 
+> para retornar un objeto estático fallback si el filtro omitió todos los productos. En `buscarPorId(id)`, 
+> usé `switchIfEmpty(Mono.error(new ProductoNoEncontradoException(id)))` para conmutar a un Mono alternativo que lanza una 
+> excepción reactiva. No son intercambiables porque `defaultIfEmpty` solo recibe un valor escalar, mientras
+> que `switchIfEmpty` recibe un `Publisher` alternativo,como `Mono.error`.
 
 **4.5** ¿Por qué `doOnNext` no sirve para transformar el elemento, si aparentemente
 "recibe" el producto?
 
->
+>`doOnNext` es un operador diseñado para efectos secundarios,
+> como logging u observación (`ProductoFilters.LOG_PRODUCTO`). Aunque la lambda recibe el 
+> producto emitido, el retorno de dicha lambda es ignorado por Reactor y el objeto original
+> continúa en el flujo sin sufrir modificaciones.
 
 ---
 

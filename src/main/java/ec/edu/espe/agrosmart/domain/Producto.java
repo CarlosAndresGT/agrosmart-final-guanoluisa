@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-
+//Modelo de dominio 100% inmutable.
 
 public final class Producto {
 
@@ -21,7 +21,7 @@ public final class Producto {
         this.nombre = nombre;
         this.categoria = categoria;
         this.precioUsd = precioUsd;
-        // copia defensiva de ENTRADA
+        // Copia defensiva de ENTRADA
         this.correosNotificacion = correosNotificacion == null
                 ? Collections.emptyList()
                 : new ArrayList<>(correosNotificacion);
@@ -43,7 +43,7 @@ public final class Producto {
         return precioUsd;
     }
 
-    // copia defensiva de SALIDA
+    // Copia defensiva de SALIDA
     public List<String> getCorreosNotificacion() {
         return Collections.unmodifiableList(new ArrayList<>(correosNotificacion));
     }
