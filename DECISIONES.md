@@ -349,7 +349,7 @@ $ curl "http://localhost:8177/api/agrosmart/publicidad?producto=Rosas%20Rojas&au
 
 **6.2** ¿Cómo lograste que el id inexistente responda **404** y no 500?
 
->Lo logré anotando la excepción `ProductoNoEncontradoException` con `@ResponseStatus(HttpStatus.NOT_FOUND)` y añadiendo el método manejador
+>Lo realicé anotando la excepción `ProductoNoEncontradoException` con `@ResponseStatus(HttpStatus.NOT_FOUND)` y añadiendo el método manejador
 > `@ExceptionHandler(ProductoNoEncontradoException.class)` anotado con `@ResponseStatus(HttpStatus.NOT_FOUND)` en `AgroSmartController`
 > asi cuando `buscarPorId` emite `Mono.error(new ProductoNoEncontradoException(id))`, WebFlux intercepta el error y responde con el código HTTP 404 Not Found
 > en lugar de un error 500 no controlado.
@@ -462,20 +462,38 @@ de copia defensiva?
 **8.1** Pega tu `git log --oneline --graph --all`.
 
 ```
-
+PS C:\Users\carlo\OneDrive\Documentos\ESPE\F7MO\FINALPROGRAMACION\agrosmart-final-guanoluisa> git log --oneline --graph --all
+* 27528c0 (HEAD -> main, origin/main, origin/feature/pruebas, origin/HEAD, feature/pruebas) test: agrega pruebas del modelo, logica funcional, flujo reactivo e ia
+* 3a9dfa3 (origin/feature/api-reactiva, feature/api-reactiva) feat: expone endpoints reactivos y de publicidad
+* f2740d6 (origin/feature/ia-langchain4j, feature/ia-langchain4j) feat: integra langchain4j para publicidad de productos
+* 0eefaee (origin/feature/servicio-reactivo, feature/servicio-reactivo) feat: implementa servicio reactivo con boundedElastic y operadores
+* d77df71 (origin/feature/modelo-inmutable, feature/modelo-inmutable) feat: agrega modelo inmutable de producto y logica funcional
+* 289e10e (origin/feature/persistencia-jpa, feature/persistencia-jpa) feat: agrega entidad jpa de productos y siembra de datos
+* ee30c44 (origin/feature/config-perfiles, feature/config-perfiles) chore: configura perfil prod con postgresql y puerto propio
+* 02a8e03 Tchore: inicializa proyecto agrosmart y registra identidad del examen
+* e7a3d8b Initial commit
 ```
 
 **8.2** ¿Qué fase te tomó más tiempo del previsto y por qué?
 
->
+>Considero que hubo 2 fases en las que use más tiempo del necesario, la Fase 3 y la Fase 4
+> en la Fase 3, tuve inconvenientes al asegurar la inmutabilidad estricta del modelo PRODUCTO,
+> para ser especifico me tomo tiempo comprender y aplicarla doble copia defensiva. En la Fase 4
+> la dificultad que tuve fue verificar el aislamiento del hilo bloqueante.
 
 **8.3** Si tuvieras 30 minutos más, ¿qué mejorarías **primero** de tu entrega y por qué
 esa y no otra?
 
->
+>Tomando en cuenta el tiempo que se nos dio, pienso que ha sido considerable
+> ,sin embargo, considero que podria mejorar en la seccion de pruebas agregando
+> simulaciones de peticiones HTTP a los endpoint de `AgroSmartController`
 
 **8.4** Declara honestamente qué herramientas consultaste durante el examen
 (documentación, apuntes, asistentes de IA) y para qué. **Esta declaración no descuenta
 puntaje**; su omisión o falsedad sí constituye falta de honestidad académica.
 
->
+>Para la mayor parte de resolución me guie en los ejercicios que teniamos realizados en clase,sin embargo, 
+> también utilice ChatGPT para solventar errores que no entendia, como por ejemplo
+> el comando `.\mvnw test` no me funcionaba y al consultar y verificar en la version que tengo 
+> instalada es necesario colocar `.\mvnw.cmd test` o para obtener datos para llenar en la seccion del
+> seeder, adicionalmente la guia brindada en el Archivo `README` del proyecto
